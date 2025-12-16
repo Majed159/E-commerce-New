@@ -2,9 +2,62 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
+use PhpParser\Node\Expr\FuncCall;
 
 class Brand extends Model
 {
-    //
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'logo',
+        'website',
+        'is_active',
+        'sort_order',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+    #[Scope()]
+    protected function active(Builder $builder){
+        $builder->where('is_active',true);
+    }
+
+    #[Scope()]
+    protected function sorted(Builder $builder){
+        $builder->orderBy('sort_order','asc');
+    }
+
+    //Relationshipes
+    public function products()  {
+        return $this->hasMany(Product::class);
+    }
+    protected static Function boot(){
+        parent::boot();
+
+        static::creating(function ($brand) {
+            if(empty($brand->slug)){
+                $brand->slug= Str::slug($brand->name);
+            }
+        });
+        static::updating(function ($brand) {
+            if($brand->isDirty('name') && empty($brand->empty)){
+                $brand->slug= Str::slug($brand->name);
+            }
+        });
+    }
+
+
+
+
+
+
 }
