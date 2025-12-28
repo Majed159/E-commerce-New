@@ -2,6 +2,7 @@
 
 namespace App\Models;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,8 +53,19 @@ class Category extends Model
             }
         });
         static::updating(function ($category) {
-            if($category->isDirty('name') && empty($category->empty)){
+            if($category->isDirty('name') && empty($category->slug)){
                 $category->slug= Str::slug($category->name);
+            }
+        });
+
+        static::saved(function ($category) {
+            if ($category->image) {
+                $source = storage_path('app/public/' . $category->image);
+                $dest = public_path('storage/' . $category->image);
+                if (File::exists($source)) {
+                    File::ensureDirectoryExists(dirname($dest));
+                    File::copy($source, $dest);
+                }
             }
         });
     }
