@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->string('full_name');
             $table->string('phone');
-            $table->string('adress_line_1');
-            $table->string('adress_line_2')->nullable();
+            $table->string('address_line_1');
+            $table->string('address_line_2')->nullable();
             $table->string('city');
             $table->string('state')->nullable();
             $table->string('postal_code');

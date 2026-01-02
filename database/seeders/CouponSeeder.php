@@ -41,7 +41,7 @@ class CouponSeeder extends Seeder
                 'type' => 'percentage',
                 'value' => 25,
                 'minimum_order_value' => 200,
-                'maximum_discount' => 50,
+                'maximum_discount_value' => 50,
                 'expires_at' => now()->addMonths(3),
             ],
         ];
@@ -52,7 +52,7 @@ class CouponSeeder extends Seeder
                 'type' => $coupon['type'],
                 'value' => $coupon['value'],
                 'minimum_order_value' => $coupon['minimum_order_value'] ?? null,
-                'maximum_discount' => $coupon['maximum_discount'] ?? null,
+                'maximum_discount_value' => $coupon['maximum_discount_value'] ?? null,
                 'usage_limit' => $coupon['usage_limit'] ?? null,
                 'usage_limit_per_customer' => 1,
                 'starts_at' => now(),

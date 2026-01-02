@@ -25,7 +25,7 @@ class CouponFactory extends Factory
             'type' => $type,
             'value' => $value,
             'minimum_order_value' => fake()->boolean(50) ? fake()->numberBetween(50, 200) : null,
-            'maximum_discount' => $type === 'percentage' ? fake()->numberBetween(20, 100) : null,
+            'maximum_discount_value' => $type === 'percentage' ? fake()->numberBetween(20, 100) : null,
             'usage_limit' => fake()->boolean(70) ? fake()->numberBetween(10, 100) : null,
             'usage_limit_per_customer' => fake()->boolean(80) ? fake()->numberBetween(1, 5) : null,
             'starts_at' => now()->subDays(fake()->numberBetween(0, 30)),

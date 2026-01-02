@@ -18,8 +18,8 @@ class ReviewFactory extends Factory
      */
     public function definition(): array
     {
-        $rating = fake()->numberBetween(1,5);
-         return [
+               $rating = fake()->numberBetween(1, 5);
+       return [
             'product_id' => Product::factory(),
             'customer_id' => Customer::factory(),
             'order_id' => null,
