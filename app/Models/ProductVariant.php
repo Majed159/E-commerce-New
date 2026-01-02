@@ -3,15 +3,18 @@
 namespace App\Models;
 use App\Models\Product;
 use App\Models\OrderItem;
+use Illuminate\Support\Str;
 use App\Models\ProductImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Support\Str;
 use phpDocumentor\Reflection\Types\Void_;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProductVariant extends Model
 {
+    use HasFactory;
+
     protected $fillable =[
         'product_id',
         'name',
@@ -30,7 +33,7 @@ class ProductVariant extends Model
     {
         return [
             'price'=>'decimal:2',
-            'oprions'=>'decimal:2',
+            'options'=>'array',
             'compare_price'=>'decimal:2',
             'stock_quantity'=>'integer',
             'is_active'=>'boolean',

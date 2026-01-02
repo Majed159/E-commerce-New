@@ -5,9 +5,13 @@ namespace App\Filament\Resources\Coupons\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use PhpParser\Node\Expr\Ternary;
 
 class CouponsTable
 {
@@ -16,26 +20,44 @@ class CouponsTable
         return $table
             ->columns([
                 TextColumn::make('code')
+                    ->sortable()
+                    ->copyable()
+                    ->weight('bold')
                     ->searchable(),
                 TextColumn::make('type')
+                    ->colors([
+                        'fixed' => 'success',
+                        'percentage' => 'info',
+                    ])
                     ->badge(),
                 TextColumn::make('value')
-                    ->numeric()
+                    ->label('Discount')
+                    ->formatStateUsing(
+                        fn($record) =>
+                        $record->type === 'percentage'
+                            ? $record->value . '%'
+                            : '$' . number_format($record->value, 2)
+                    )
+                    ->weight('bold')
                     ->sortable(),
                 TextColumn::make('minimum_order_value')
-                    ->numeric()
+                    ->label('Min. Order')
+                    ->money('USD')
                     ->sortable(),
-                TextColumn::make('maximum_discount_value')
-                    ->numeric()
-                    ->sortable(),
+
                 TextColumn::make('usage_limit')
-                    ->numeric()
+                    ->toggleable()
                     ->sortable(),
-                TextColumn::make('usage_limit_per_customer')
-                    ->numeric()
+                     TextColumn::make('usage_count')
+                    ->counts('usages')
+                    ->label('Used')
+                    ->color('Warning')
                     ->sortable(),
+
                 TextColumn::make('starts_at')
+                ->placeholder('Active Now')
                     ->dateTime()
+                    ->color(fn($state)=> $state && $state->isPast()? 'danger' : 'gray' )
                     ->sortable(),
                 TextColumn::make('expires_at')
                     ->dateTime()
@@ -51,8 +73,21 @@ class CouponsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at','desc')
             ->filters([
-                //
+                SelectFilter::make('type')
+                ->native(false)
+                ->options([
+                    'fixed' =>'Fixed',
+                    'percentage' =>'Percentage',
+                ]),
+                TernaryFilter::make('is_active')
+                ->label('Status')
+                ->boolean()
+                ->trueLabel('Active Only')
+                ->falseLabel('Inactive only')
+                ->native(false)
+
             ])
             ->recordActions([
                 EditAction::make(),

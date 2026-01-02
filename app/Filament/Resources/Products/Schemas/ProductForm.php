@@ -2,19 +2,22 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
-use Dom\Text;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\KeyValue;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Tabs;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Support\Icons\Heroicon;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\ToggleButtons;
+use Illuminate\Support\Str;
 
 class ProductForm
 {
@@ -35,13 +38,12 @@ class ProductForm
                                         TextInput::make('slug')
                                             ->unique(ignoreRecord: true)
                                             ->visible(fn(string $operation) => $operation === 'edit')
-                                            ->required(),
+                                            ->required(fn(string $operation) => $operation === 'edit'),
                                         Select::make('category_id')
                                             ->relationship('category', 'name')
                                             ->preload()
                                             ->searchable()
                                             ->required()
-                                            ->searchable()
                                             ->createOptionForm([
                                                 TextInput::make('name')
                                                     ->required(),
@@ -50,12 +52,11 @@ class ProductForm
                                                     ->readOnly()
                                                     ->visibleOn('edit'),
                                             ]),
-
                                         Select::make('brand_id')
                                             ->relationship('brand', 'name')
                                             ->preload()
-                                            ->required()
                                             ->searchable()
+                                            ->default(null)
                                             ->createOptionForm([
                                                 TextInput::make('name')
                                                     ->required(),
@@ -76,38 +77,36 @@ class ProductForm
                                             ->columnSpanFull(),
                                     ])
                             ]),
-
-                        Tab::make('Pricing & inventory')
+                        Tab::make('Pricing & Inventory')
                             ->icon(Heroicon::CurrencyDollar)
-
                             ->schema([
-                                Section::make('Pricing ')
+                                Section::make('Pricing')
                                     ->schema([
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            ->helperText('Stock Keeping  Unit  - unique identifier')
+                                            ->default(fn() => 'SKU-'. strtoupper(Str::random(8)))
+                                            ->helperText('Stock keeping Unit -  unique identifier')
                                             ->required(),
+
                                         TextInput::make('price')
                                             ->required()
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
-                                            ->helperText('Selling Price')
+                                            ->helperText('Selling Price') // $40 %10 OFF
                                             ->prefix('$'),
                                         TextInput::make('compare_price')
                                             ->numeric()
-                                            ->default(null)
-                                            ->helperText('Original price  to show discount') //50
-
+                                            ->minValue(0)
                                             ->step(0.01)
+                                            ->helperText('Original price to show discount') // $50
                                             ->prefix('$'),
                                         TextInput::make('cost_price')
                                             ->numeric()
-                                            ->default(null)
+                                            ->minValue(0)
                                             ->step(0.01)
-                                            ->helperText('cost from Supplier(for profit calculations)')
-
+                                            ->helperText('cost from supplier (for profit calculations)')
                                             ->prefix('$'),
                                     ])->columns(2),
                                 Section::make('Inventory')
@@ -149,8 +148,8 @@ class ProductForm
                         Tab::make('Images')
                             ->icon(Heroicon::Photo)
                             ->schema([
-                                Section::make('Product Images ')
-                                    ->description('Upload Multiple images. the first image will be the primary image.')
+                                Section::make('Product Images')
+                                    ->description('Upload multiple images. The first image will be the primary image.')
                                     ->schema([
                                         FileUpload::make('images')
                                             ->label('Product Images')
@@ -162,8 +161,10 @@ class ProductForm
                                             ->reorderable()
                                             ->columnSpanFull()
                                             ->helperText('You can drag and drop to reorder images')
-                                            ->saveRelationshipsUsing(function ($compoent, $state, $record) {
+                                            ->saveRelationshipsUsing(function ($component, $state, $record) {
+                                                // delete exisiting images
                                                 $record->images()->delete();
+
                                                 if (is_array($state)) {
                                                     foreach ($state as $index => $imagePath) {
                                                         $record->images()->create([
@@ -177,20 +178,106 @@ class ProductForm
                                             ->dehydrated(false)
                                     ])
                             ]),
-                    ]),
-
-                Tab::make('Setting')
-                    ->icon(Heroicon::Cog6Tooth)
-                    ->schema([
-                        Section::make('Prodcut status')
+                        Tab::make('Product Variants')
+                            ->icon(Heroicon::Squares2x2)
                             ->schema([
-                                Toggle::make('is_active')
+                                Toggle::make('has_variants')
+                                    ->live()
                                     ->required(),
+                                Section::make('Product Variants')
+                                    ->description('Add variants like different sizez or colors')
+                                    ->schema([
+                                        Repeater::make('variants')
+                                            ->relationship('variants')
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->required()
+                                                    ->label('Variant Name')
+                                                    ->placeholder('e.g., Red - Large'),
+                                                KeyValue::make('options'),
+                                                TextInput::make('sku')
+                                                    ->label('SKU')
+                                                    ->unique(ignoreRecord: true)
+                                                    ->helperText('Stock keeping Unit -  unique identifier')
+                                                    ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
+                                                    ->required()
+                                                    ->columnSpan(2),
+                                                TextInput::make('price')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->prefix('$')
+                                                    ->minValue(0)
+                                                    ->step(0.01),
 
-                                Toggle::make('is_featured')
-                                    ->required(),
+                                                TextInput::make('compare_price')
+                                                    ->label('Compare Price')
+                                                    ->numeric()
+                                                    ->prefix('$')
+                                                    ->minValue(0)
+                                                    ->step(0.01),
+
+                                                TextInput::make('stock_quantity')
+                                                    ->label('Stock')
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->minValue(0)
+                                                    ->required(),
+                                                Select::make('stock_status')
+                                                    ->options([
+                                                        'in_stock' => 'In Stock',
+                                                        'out_of_stock' => 'Out of Stock',
+                                                        'on_backorder' => 'On Backorder',
+                                                    ])
+                                                    ->default('in_stock')
+                                                    ->required()
+                                                    ->native(false),
+
+                                                Toggle::make('is_active')
+                                                    ->label('Active')
+                                                    ->default(true),
+                                            ])
+                                            ->columns(2)
+                                            ->defaultItems(0)
+                                            ->collapsible()
+                                            ->itemLabel(fn(array $state): ?string => $state['name'] ?? null)
+                                            ->addActionLabel('Add Variant'),
+                                    ])
+                                    ->visible(fn(callable $get) => $get('has_variants'))
+                                    ->columnSpanFull()
+                            ]),
+                        // settings
+                        Tab::make('Settings')
+                            ->icon(Heroicon::Cog6Tooth)
+                            ->schema([
+                                Section::make('Poduct status')
+                                    ->schema([
+                                        Toggle::make('is_active')
+                                            ->required(),
+                                        Toggle::make('is_featured')
+                                            ->required(),
+                                    ])
+                                    ->columns(2),
+                                Section::make('statistics')
+                                    ->schema([
+                                        Placeholder::make('views_count')
+                                            ->content(fn($record) => $record?->views_count ?? 0),
+                                        Placeholder::make('created_at')
+                                            ->label('Created')
+                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-')
+                                    ])
+                            ]),
+                        Tab::make('SEO')
+                            ->icon(Heroicon::MagnifyingGlass)
+                            ->schema([
+                                Section::make('Search Engine Optimazation')
+                                    ->schema([
+                                        TextInput::make('meta_title')
+                                            ->default(null),
+                                        Textarea::make('meta_description')
+                                            ->default(null)
+                                            ->columnSpanFull(),
+                                    ])
                             ])
-                            ->columns(2),
                     ]),
 
 
@@ -198,16 +285,6 @@ class ProductForm
 
 
 
-                Toggle::make('has_variants')
-                    ->required(),
-
-                TextInput::make('meta_title'),
-                Textarea::make('meta_description')
-                    ->columnSpanFull(),
-                TextInput::make('views_count')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
             ]);
     }
 }

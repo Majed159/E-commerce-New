@@ -17,7 +17,7 @@ use UnitEnum;
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
-    protected static string |UnitEnum|null $navigationGroup ="Customer Mange";
+    protected static string |UnitEnum|null $navigationGroup ="Customer Mangement";
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
 

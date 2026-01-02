@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 
 class Product extends Model
 {
+    use HasFactory;
+
     use SoftDeletes;
     protected $fillable = [
         'category_id',
@@ -64,7 +67,7 @@ class Product extends Model
     #[Scope]
     protected function inCategory(Builder $query, int $categoryId):void
     {
-        $query->where('catgory_id',$categoryId);
+        $query->where('category_id',$categoryId);
     }
 
     #[Scope]
@@ -98,7 +101,7 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order','asc');
     }
-    public function primaryImages()
+    public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)->where('is_primary',true);
     }
