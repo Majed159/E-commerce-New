@@ -58,6 +58,12 @@ class Product extends Model
 
 
     #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('is_active', true);
+    }
+
+    #[Scope]
     protected function lowStock(Builder $query):void
     {
         $query->whereColumn('stock_quantity','<=','low_stock_threshold')

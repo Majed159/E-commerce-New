@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-class Customer extends Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class Customer extends Authenticatable
 {
     use HasFactory;
     protected $fillable = [
@@ -15,34 +15,73 @@ class Customer extends Model
         'email',
         'password',
         'phone',
-        'data_of_birth',
+        'date_of_birth',
         'gender',
         'is_active',
-        'email_verified',
-        'remember_toker'
+        'remember_token',
+        'email_verified_at',
     ];
 
-    protected $hhidden =[
+    protected $hidden = [
         'password',
-        'remeber_token',
+        'remember_token',
     ];
 
-    protected function casts():array
+    protected function casts(): array
     {
-        return[
+        return [
             'email_verified_at' => 'datetime',
-            'data_of_birth' => 'date',
-            'is_active' => 'boolean',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
+            'is_active' => 'boolean',
         ];
     }
 
+    /**
+     * Scope to only active customers
+     */
     #[Scope]
-    protected function active(Builder $query):void
+    protected function active(Builder $query): void
     {
-        $query->where('is_active',true);
+        $query->where('is_active', true);
     }
 
+    // Relationships
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(Address::class)->where('is_default', true);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function couponUsages()
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
+    // Helper Methods
+    public function getTotalSpentAttribute()
+    {
+        return $this->orders()->where('payment_status', 'paid')->sum('total');
+    }
+
+    public function getOrdersCountAttribute()
+    {
+        return $this->orders()->count();
+    }
 
 
 }

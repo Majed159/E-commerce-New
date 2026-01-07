@@ -33,9 +33,9 @@ class Category extends Model
     }
 
 
-     #[Scope()]
+    #[Scope()]
     protected function active(Builder $builder){
-        $builder->where('is_active',true);
+        $builder->where('is_active', true);
     }
 
     #[Scope()]
